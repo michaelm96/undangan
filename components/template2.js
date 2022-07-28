@@ -1,10 +1,13 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect, Fragment, useRef } from "react";
 import {
+  Alert as MuiAlert,
   Avatar,
+  Backdrop,
   Button,
   Box,
   Chip,
   Divider,
+  Fade,
   FormControl,
   Input,
   List,
@@ -12,6 +15,7 @@ import {
   ListItemAvatar,
   ListItemText,
   MenuItem,
+  Modal,
   NativeSelect,
   Select,
   Stack,
@@ -34,14 +38,46 @@ import Image from "next/image";
 import Head from "next/head";
 // import { useSelector } from "react-redux";
 import { calculateTimeLeft } from "../utils/helpers/calculateDuration";
+import { POST } from "../utils/network/baseRequest.utils";
+import api from "../utils/network/baseUrl.utils";
+import { modal } from "../utils/helpers/modal";
+import { successAlert } from "../utils/helpers/alert";
+
 import moment from "moment";
 import "moment/locale/id";
 moment.locale("id");
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "100%",
+  height: "100%",
+  // backgroundColor: "red",
+  backgroundImage: "linear-gradient(to right, #b92b27, #1565c0)",
+  // border: "2px solid #000",
+  // boxShadow: 24,
+  p: 4,
+};
 
 const Template2 = (props) => {
   const [store, setStore] = useState(props.store);
   const theArr = store.theProject.gallery.konten.gambar;
   const theChats = store.theProject.comments.chats;
+  const audioRef = useRef();
+  const [nama, setNama] = useState("");
+  const [comment, setComment] = useState("");
+  const [datang, setDatang] = useState(true);
+  const [open, setOpen] = useState(true);
+  const [openSnack, setOpenSnack] = useState(false);
+  const [msg, setMsg] = useState("");
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+  });
 
   const hari = {
     0: "Minggu",
@@ -74,11 +110,40 @@ const Template2 = (props) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTimeLeft(calculateTimeLeft(store.theProject.tanggal, store.theProject.jam_mulai));
+      setTimeLeft(
+        calculateTimeLeft(store.theProject.tanggal, store.theProject.jam_mulai)
+      );
     }, 1000);
 
     return () => clearTimeout(timer);
   });
+
+  const send = async (id) => {
+    if (!nama || !comment) {
+      console.log("gak lengkap");
+      return;
+    }
+    try {
+      const sendComment = await POST(api.BASE_URL + api.ENDPOINT.chat, {
+        data: {
+          nama: nama,
+          datang: datang,
+          ucapan: comment,
+          comment: id,
+        },
+      });
+      if(sendComment.status === 200) {
+        setMsg("Sukses dikirim");
+        setOpenSnack(true);
+        setTimeout(() => {
+          setOpenSnack(false);
+        }, 3000);
+      }
+      // console.log(sendComment, "@131");
+    } catch (error) {
+      console.log(error, "@89");
+    }
+  };
 
   const hero = () => {
     return (
@@ -104,7 +169,12 @@ const Template2 = (props) => {
         <Image src={FlowerR.src} width={300} height={300} />
 
         <Box
-          sx={{ width: "100%", display: "flex", justifyContent: "center", position: "absolute" }}
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            position: "absolute",
+          }}
         >
           <Box
             sx={{
@@ -310,7 +380,10 @@ const Template2 = (props) => {
               className="poligon"
             >
               <img
-                src={process.env.NEXT_PUBLIC_BACKEND_API + store.theProject.customer_data.groom.pic}
+                src={
+                  process.env.NEXT_PUBLIC_BACKEND_API +
+                  store.theProject.customer_data.groom.pic
+                }
                 width={400}
                 height={400}
                 className="clippedHexagon"
@@ -323,7 +396,12 @@ const Template2 = (props) => {
               }}
             >
               <img
-                style={{ position: "relative", margin: "0 auto", width: "100%", height: "330px" }}
+                style={{
+                  position: "relative",
+                  margin: "0 auto",
+                  width: "100%",
+                  height: "330px",
+                }}
                 src={tilted.src}
                 width={300}
                 height={400}
@@ -357,7 +435,9 @@ const Template2 = (props) => {
               </Typography>
               <Typography
                 sx={{
-                  fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1.2}px`,
+                  fontSize: `${
+                    store.theProject.bride_and_groom.teks.ukuran * 1.2
+                  }px`,
                   color: store.theProject.bride_and_groom.teks.warna_font
                     ? `${store.theProject.bride_and_groom.teks.warna_font}`
                     : "#FFF",
@@ -371,7 +451,9 @@ const Template2 = (props) => {
               </Typography>
               <Typography
                 sx={{
-                  fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1.2}px`,
+                  fontSize: `${
+                    store.theProject.bride_and_groom.teks.ukuran * 1.2
+                  }px`,
                   color: store.theProject.bride_and_groom.teks.warna_font
                     ? `${store.theProject.bride_and_groom.teks.warna_font}`
                     : "#FFF",
@@ -442,7 +524,10 @@ const Template2 = (props) => {
               className="poligon"
             >
               <img
-                src={process.env.NEXT_PUBLIC_BACKEND_API + store.theProject.customer_data.bride.pic}
+                src={
+                  process.env.NEXT_PUBLIC_BACKEND_API +
+                  store.theProject.customer_data.bride.pic
+                }
                 width={400}
                 height={400}
                 className="clippedHexagon"
@@ -455,7 +540,12 @@ const Template2 = (props) => {
               }}
             >
               <img
-                style={{ position: "relative", margin: "0 auto", width: "100%", height: "330px" }}
+                style={{
+                  position: "relative",
+                  margin: "0 auto",
+                  width: "100%",
+                  height: "330px",
+                }}
                 src={tilted.src}
                 width={300}
                 height={400}
@@ -489,7 +579,9 @@ const Template2 = (props) => {
               </Typography>
               <Typography
                 sx={{
-                  fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1.2}px`,
+                  fontSize: `${
+                    store.theProject.bride_and_groom.teks.ukuran * 1.2
+                  }px`,
                   color: store.theProject.bride_and_groom.teks.warna_font
                     ? `${store.theProject.bride_and_groom.teks.warna_font}`
                     : "#FFF",
@@ -502,7 +594,9 @@ const Template2 = (props) => {
               </Typography>
               <Typography
                 sx={{
-                  fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1}px`,
+                  fontSize: `${
+                    store.theProject.bride_and_groom.teks.ukuran * 1
+                  }px`,
                   color: store.theProject.bride_and_groom.teks.warna_font
                     ? `${store.theProject.bride_and_groom.teks.warna_font}`
                     : "#FFF",
@@ -603,7 +697,9 @@ const Template2 = (props) => {
               color="#B07778"
               fontFamily="MontSerrat"
             >
-              {store.theProject.nama_acara ? store.theProject.nama_acara : "Resepsi"}
+              {store.theProject.nama_acara
+                ? store.theProject.nama_acara
+                : "Resepsi"}
             </Typography>
             <br />
             <Typography
@@ -705,7 +801,9 @@ const Template2 = (props) => {
             <Typography sx={{ opacity: 0 }}>Kamis, 1 Januari 2022</Typography>
             <Typography sx={{ opacity: 0 }}>08:00 - 21:00 WITA</Typography>
             <br />
-            <Typography sx={{ opacity: 0 }}>Dsn. Wanasari Tengah Desa Wanasari Tabanan</Typography>
+            <Typography sx={{ opacity: 0 }}>
+              Dsn. Wanasari Tengah Desa Wanasari Tabanan
+            </Typography>
             <br />
             <Button sx={{ opacity: 0 }} variant="contained">
               Buka Peta
@@ -754,8 +852,12 @@ const Template2 = (props) => {
             : "Hari Bahagia"}
         </Typography>
         <Box display="flex" justifyContent="center" width="100%" mt={5}>
-          <Box display="flex" justifyContent="space-around" width="100%" flexWrap="wrap">
-
+          <Box
+            display="flex"
+            justifyContent="space-around"
+            width="100%"
+            flexWrap="wrap"
+          >
             {/* Hari */}
             <Box
               sx={{
@@ -766,8 +868,18 @@ const Template2 = (props) => {
               letterSpacing={4}
               mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.days.toString().length < 2 ? "0" + timeLeft.days : timeLeft.days : "01"}
+              <Typography
+                sx={{
+                  fontSize: "48px",
+                  color: "#C18F7C",
+                  fontFamily: "Alex Brush",
+                }}
+              >
+                {timeLeft
+                  ? timeLeft.days.toString().length < 2
+                    ? "0" + timeLeft.days
+                    : timeLeft.days
+                  : "01"}
               </Typography>
               <Typography
                 sx={{
@@ -792,8 +904,18 @@ const Template2 = (props) => {
               letterSpacing={4}
               mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.hours.toString().length < 2 ? "0" + timeLeft.hours : timeLeft.hours : "23"}
+              <Typography
+                sx={{
+                  fontSize: "48px",
+                  color: "#C18F7C",
+                  fontFamily: "Alex Brush",
+                }}
+              >
+                {timeLeft
+                  ? timeLeft.hours.toString().length < 2
+                    ? "0" + timeLeft.hours
+                    : timeLeft.hours
+                  : "23"}
               </Typography>
               <Typography
                 sx={{
@@ -818,8 +940,18 @@ const Template2 = (props) => {
               letterSpacing={4}
               mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.minutes.toString().length < 2 ? "0" + timeLeft.minutes : timeLeft.minutes : "45"}
+              <Typography
+                sx={{
+                  fontSize: "48px",
+                  color: "#C18F7C",
+                  fontFamily: "Alex Brush",
+                }}
+              >
+                {timeLeft
+                  ? timeLeft.minutes.toString().length < 2
+                    ? "0" + timeLeft.minutes
+                    : timeLeft.minutes
+                  : "45"}
               </Typography>
               <Typography
                 sx={{
@@ -844,8 +976,18 @@ const Template2 = (props) => {
               letterSpacing={4}
               mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.seconds.toString().length < 2 ? "0" + timeLeft.seconds : timeLeft.seconds : "67"}
+              <Typography
+                sx={{
+                  fontSize: "48px",
+                  color: "#C18F7C",
+                  fontFamily: "Alex Brush",
+                }}
+              >
+                {timeLeft
+                  ? timeLeft.seconds.toString().length < 2
+                    ? "0" + timeLeft.seconds
+                    : timeLeft.seconds
+                  : "67"}
               </Typography>
               <Typography
                 sx={{
@@ -913,14 +1055,23 @@ const Template2 = (props) => {
             ? store.theProject.gallery.konten.desc
             : "lorem ipsum"}
         </Typography>
-        <Box display="flex" flexWrap="wrap" width="100%" justifyContent="center">
+        <Box
+          display="flex"
+          flexWrap="wrap"
+          width="100%"
+          justifyContent="center"
+        >
           {theArr &&
             theArr.map((ele) => {
               return (
                 <Box m={3}>
                   <Image
-                    loader={() => process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url}
-                    src={process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url}
+                    loader={() =>
+                      process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url
+                    }
+                    src={
+                      process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url
+                    }
                     width={300}
                     height={500}
                   />
@@ -1014,16 +1165,10 @@ const Template2 = (props) => {
               padding: "10px",
               borderRadius: "10px",
             }}
-            // fullWidth
-            // value={dataLama ? dataLama.judul : ""}
-            // onChange={(e) =>
-            //   setDataLama((dataLama) => {
-            //     return {
-            //       ...dataLama,
-            //       judul: e.target.value,
-            //     };
-            //   })
-            // }
+            onChange={(e) => {
+              setNama(e.target.value);
+            }}
+            value={nama}
           />
           <br />
           <FormControl sx={{ mb: "1rem", width: "100%" }}>
@@ -1039,7 +1184,7 @@ const Template2 = (props) => {
               Kedatangan
             </Typography>
             <NativeSelect
-              defaultValue={"yes"}
+              defaultValue={datang}
               inputProps={{
                 name: "datang",
                 id: "uncontrolled-native",
@@ -1050,9 +1195,13 @@ const Template2 = (props) => {
                 borderRadius: "10px",
                 padding: "0 6px",
               }}
+              onChange={(e) => {
+                setDatang(e.target.value === "false" ? false : true)
+                console.log(e.target.value, "@985");
+              }}
             >
-              <option value={"yes"}> Ya, Saya akan datang</option>
-              <option value={"no"}> Maaf, Saya tidak bisa datang</option>
+              <option value={true}> Ya, Saya akan datang</option>
+              <option value={false}> Maaf, Saya tidak bisa datang</option>
             </NativeSelect>
             {/* <Select
               labelId="demo-simple-select-label"
@@ -1089,6 +1238,10 @@ const Template2 = (props) => {
               padding: "10px",
               borderRadius: "10px",
             }}
+            onChange={(e) => {
+              setComment(e.target.value);
+            }}
+            value={comment}
           />
           <Button
             sx={{
@@ -1102,6 +1255,7 @@ const Template2 = (props) => {
                 backgroundColor: "#e65602",
               },
             }}
+            onClick={() => send(store.theProject.comments.id)}
           >
             Kirim
             <SendIcon />
@@ -1126,7 +1280,9 @@ const Template2 = (props) => {
               overflow="auto"
               sx={{ backgroundColor: "transparent" }}
             >
-              <List sx={{ width: "100%", bgcolor: "transparent", color: "white" }}>
+              <List
+                sx={{ width: "100%", bgcolor: "transparent", color: "white" }}
+              >
                 {theChats.map((ele, idx) => {
                   return (
                     <>
@@ -1134,7 +1290,11 @@ const Template2 = (props) => {
                         <ListItemAvatar>
                           <Avatar
                             sx={{ backgroundColor: "#B07778" }}
-                            alt={ele.attributes.nama ? ele.attributes.nama : "John Doe"}
+                            alt={
+                              ele.attributes.nama
+                                ? ele.attributes.nama
+                                : "John Doe"
+                            }
                             src="/static/images/avatar/1.jpg"
                           />
                         </ListItemAvatar>
@@ -1149,11 +1309,20 @@ const Template2 = (props) => {
                                 fontWeight="bold"
                                 mr={2}
                               >
-                                {ele.attributes.nama ? ele.attributes.nama : "John Doe"}
+                                {ele.attributes.nama
+                                  ? ele.attributes.nama
+                                  : "John Doe"}
                               </Typography>
                               <Chip
-                                label={ele.attributes.datang ? "Akan Datang" : "Tidak Datang"}
-                                sx={{ color: "#B07778", backgroundColor: "white" }}
+                                label={
+                                  ele.attributes.datang
+                                    ? "Akan Datang"
+                                    : "Tidak Datang"
+                                }
+                                sx={{
+                                  color: "#B07778",
+                                  backgroundColor: "white",
+                                }}
                               />
                             </Fragment>
                           }
@@ -1167,7 +1336,9 @@ const Template2 = (props) => {
                                 mr={2}
                               >
                                 {ele.attributes.createdAt
-                                  ? moment(ele.attributes.createdAt).format("DD MMMM YYYY hh:mm")
+                                  ? moment(ele.attributes.createdAt).local().format(
+                                      "DD MMMM YYYY HH:mm"
+                                    )
                                   : "08 Maret 2022 17:03"}
                               </Typography>
                               <Typography
@@ -1177,7 +1348,9 @@ const Template2 = (props) => {
                                 p={1}
                                 mt={1}
                               >
-                                {ele.attributes.ucapan ? ele.attributes.ucapan : "Lorem Ipsum"}
+                                {ele.attributes.ucapan
+                                  ? ele.attributes.ucapan
+                                  : "Lorem Ipsum"}
                               </Typography>
                             </React.Fragment>
                           }
@@ -1188,7 +1361,10 @@ const Template2 = (props) => {
                 })}
               </List>
             </Box>
-            <img style={{ position: "absolute", left: "-10%", top: "90%" }} src={FlowerTP.src} />
+            <img
+              style={{ position: "absolute", left: "-10%", top: "90%" }}
+              src={FlowerTP.src}
+            />
           </Box>
         </Box>
       </Box>
@@ -1244,6 +1420,12 @@ const Template2 = (props) => {
     );
   };
 
+  function playSound(url) {
+    // const audio = new Audio(url);
+    audioRef.current.play();
+    audioRef.current.loop = true;
+  }
+
   const mapping = {
     Hero: hero(),
     Regards: regard(),
@@ -1265,19 +1447,41 @@ const Template2 = (props) => {
           rel="stylesheet"
         />
       </Head>
-      <Box p={3}>
-        <audio src={store.theProject.audio} autoPlay loop>
-          <embed
-            name="GoodEnough"
-            src={store.theProject.audio}
-            loop="true"
-            hidden="true"
-            autostart="true"
-          />
-        </audio>
+      <Box p={0}>
+        <Box
+          sx={{
+            display: "none",
+          }}
+        >
+          <audio ref={audioRef} src={store.theProject.audio} autoPlay loop>
+            <embed
+              name="GoodEnough"
+              src={store.theProject.audio}
+              loop="true"
+              hidden="true"
+              autostart="true"
+            />
+          </audio>
+        </Box>
+        {modal(
+          open,
+          handleClose,
+          Backdrop,
+          style,
+          setOpen,
+          playSound,
+          Modal,
+          Fade,
+          Box,
+          Typography,
+          Button,
+          "Ms Madi"
+        )}
         {store.theProject.order.map((ele, idx) => {
           return mapping[ele.content];
         })}
+        {openSnack ? successAlert(openSnack, Alert, msg) : <></>}
+
         {/* Hero */}
 
         {/* Regard */}

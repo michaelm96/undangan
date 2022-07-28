@@ -1,10 +1,14 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState, useRef } from "react";
 import {
+  Alert as MuiAlert,
   Avatar,
+  Backdrop,
   Button,
   Box,
   Chip,
+  CircularProgress,
   Divider,
+  Fade,
   FormControl,
   Input,
   List,
@@ -12,6 +16,7 @@ import {
   ListItemAvatar,
   ListItemText,
   MenuItem,
+  Modal,
   NativeSelect,
   Select,
   Stack,
@@ -39,20 +44,57 @@ import LoveRing from "../public/assets/LoveRing.svg";
 import gallery1 from "../public/assets/gallery1.jpg";
 import curve from "../public/assets/curve.svg";
 import tilted from "../public/assets/tiltedPolygon.svg";
+import letter from "../public/assets/letter.svg";
 import Itachi from "../public/assets/Itachi.png";
 import SendIcon from "@mui/icons-material/Send";
 import Image from "next/image";
 import Head from "next/head";
 // import { useSelector } from "react-redux";
 import { calculateTimeLeft } from "../utils/helpers/calculateDuration";
+import { POST } from "../utils/network/baseRequest.utils";
+import api from "../utils/network/baseUrl.utils";
+import { modal } from "../utils/helpers/modal";
+import { successAlert } from "../utils/helpers/alert";
+
 import moment from "moment";
 import "moment/locale/id";
 moment.locale("id");
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "100%",
+  height: "100%",
+  // backgroundColor: "red",
+  backgroundImage:"linear-gradient(to right, #b92b27, #1565c0)",
+  // border: "2px solid #000",
+  // boxShadow: 24,
+  p: 4,
+};
 
 const Template3 = (props) => {
   const [store, setStore] = useState(props.store);
   const theArr = store.theProject.gallery.konten.gambar;
   const theChats = store.theProject.comments.chats;
+  const audioRef = useRef();
+  const [nama, setNama] = useState("");
+  const [comment, setComment] = useState("");
+  const [datang, setDatang] = useState(true);
+  const [open, setOpen] = useState(true);
+  const [openSnack, setOpenSnack] = useState(false);
+  const [msg, setMsg] = useState("");
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  useEffect(() => {
+    setStore(props.store);
+  }, []);
+
+  const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+  });
 
   const hari = {
     0: "Minggu",
@@ -91,11 +133,40 @@ const Template3 = (props) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTimeLeft(calculateTimeLeft(store.theProject.tanggal, store.theProject.jam_mulai));
+      setTimeLeft(
+        calculateTimeLeft(store.theProject.tanggal, store.theProject.jam_mulai)
+      );
     }, 1000);
 
     return () => clearTimeout(timer);
   });
+
+  const send = async (id) => {
+    if (!nama || !comment) {
+      console.log("gak lengkap");
+      return;
+    }
+    try {
+      const sendComment = await POST(api.BASE_URL + api.ENDPOINT.chat, {
+        data: {
+          nama: nama,
+          datang: datang,
+          ucapan: comment,
+          comment: id,
+        },
+      });
+      if(sendComment.status === 200) {
+        setMsg("Sukses dikirim");
+        setOpenSnack(true);
+        setTimeout(() => {
+          setOpenSnack(false);
+        }, 3000);
+      }
+      // console.log(sendComment, "@131");
+    } catch (error) {
+      console.log(error, "@89");
+    }
+  };
 
   const hero = () => {
     return (
@@ -181,7 +252,8 @@ const Template3 = (props) => {
           width="100%"
           height="160px"
           sx={{
-            background: "linear-gradient(to bottom, transparent 80%, rgba(28, 37, 54, 1)100%)",
+            background:
+              "linear-gradient(to bottom, transparent 80%, rgba(28, 37, 54, 1)100%)",
           }}
         >
           <Box
@@ -341,7 +413,10 @@ const Template3 = (props) => {
           <Box display="flex" flexDirection="column" alignItems="center">
             <Box position="relative">
               <img
-                src={process.env.NEXT_PUBLIC_BACKEND_API + store.theProject.customer_data.groom.pic}
+                src={
+                  process.env.NEXT_PUBLIC_BACKEND_API +
+                  store.theProject.customer_data.groom.pic
+                }
                 className="circle"
                 width="300px"
                 height="300px"
@@ -357,7 +432,9 @@ const Template3 = (props) => {
             </Typography>
             <Typography
               sx={{
-                fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1}px`,
+                fontSize: `${
+                  store.theProject.bride_and_groom.teks.ukuran * 1
+                }px`,
                 color: store.theProject.bride_and_groom.teks.warna_font
                   ? `${store.theProject.bride_and_groom.teks.warna_font}`
                   : "#FFF",
@@ -371,7 +448,9 @@ const Template3 = (props) => {
             </Typography>
             <Typography
               sx={{
-                fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1}px`,
+                fontSize: `${
+                  store.theProject.bride_and_groom.teks.ukuran * 1
+                }px`,
                 color: store.theProject.bride_and_groom.teks.warna_font
                   ? `${store.theProject.bride_and_groom.teks.warna_font}`
                   : "#FFF",
@@ -397,7 +476,10 @@ const Template3 = (props) => {
           <Box display="flex" flexDirection="column" alignItems="center">
             <Box position="relative">
               <img
-                src={process.env.NEXT_PUBLIC_BACKEND_API + store.theProject.customer_data.bride.pic}
+                src={
+                  process.env.NEXT_PUBLIC_BACKEND_API +
+                  store.theProject.customer_data.bride.pic
+                }
                 className="circle"
                 width="300px"
                 height="300px"
@@ -413,7 +495,9 @@ const Template3 = (props) => {
             </Typography>
             <Typography
               sx={{
-                fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1}px`,
+                fontSize: `${
+                  store.theProject.bride_and_groom.teks.ukuran * 1
+                }px`,
                 color: store.theProject.bride_and_groom.teks.warna_font
                   ? `${store.theProject.bride_and_groom.teks.warna_font}`
                   : "#FFF",
@@ -426,7 +510,9 @@ const Template3 = (props) => {
             </Typography>
             <Typography
               sx={{
-                fontSize: `${store.theProject.bride_and_groom.teks.ukuran * 1}px`,
+                fontSize: `${
+                  store.theProject.bride_and_groom.teks.ukuran * 1
+                }px`,
                 color: store.theProject.bride_and_groom.teks.warna_font
                   ? `${store.theProject.bride_and_groom.teks.warna_font}`
                   : "#FFF",
@@ -517,8 +603,12 @@ const Template3 = (props) => {
             alignItems: "center",
           }}
         >
-          <Typography sx={{ fontSize: "36px", color: "rgba(232, 211, 195, 1)" }}>
-            {store.theProject.nama_acara ? store.theProject.nama_acara : "Resepsi"}
+          <Typography
+            sx={{ fontSize: "36px", color: "rgba(232, 211, 195, 1)" }}
+          >
+            {store.theProject.nama_acara
+              ? store.theProject.nama_acara
+              : "Resepsi"}
           </Typography>
           <br />
           <Typography>
@@ -533,7 +623,9 @@ const Template3 = (props) => {
               : "Sabtu, 1 Januari 2022"}
           </Typography>
           <Typography>
-            {store.theProject.jam_mulai && store.theProject.jam_selesai && store.theProject.timezone
+            {store.theProject.jam_mulai &&
+            store.theProject.jam_selesai &&
+            store.theProject.timezone
               ? store.theProject.jam_mulai +
                 " - " +
                 store.theProject.jam_selesai +
@@ -548,7 +640,10 @@ const Template3 = (props) => {
               : "Surfboards, Jalan Pantai Batu Bolong, Canggu 08456, Bali, Indonesia"}
           </Typography>
           <br />
-          <Button variant="contained" sx={{ backgroundColor: "rgba(177, 145, 121, 1)" }}>
+          <Button
+            variant="contained"
+            sx={{ backgroundColor: "rgba(177, 145, 121, 1)" }}
+          >
             <a
               href={`https://www.google.com/maps/search/${store.theProject.lokasi}`}
               target="_blank"
@@ -606,110 +701,149 @@ const Template3 = (props) => {
             : "Hari Bahagia"}
         </Typography>
         <Box width="70%" display="flex" justifyContent="space-evenly">
-
           {/* Hari */}
           <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+            letterSpacing={4}
+            mx={3}
+          >
+            <Typography
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
+                fontSize: "48px",
+                color: "#C18F7C",
+                fontFamily: "Alex Brush",
               }}
-              letterSpacing={4}
-              mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.days.toString().length < 2 ? "0" + timeLeft.days : timeLeft.days : "01"}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "24px",
-                  color: store.theProject.countdown.teks.warna_font
-                    ? `${store.theProject.countdown.teks.warna_font}`
-                    : "#FFF",
-                  fontFamily: "Montserrat",
-                }}
-              >
-                Hari
-              </Typography>
-            </Box>
+              {timeLeft
+                ? timeLeft.days.toString().length < 2
+                  ? "0" + timeLeft.days
+                  : timeLeft.days
+                : "01"}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "24px",
+                color: store.theProject.countdown.teks.warna_font
+                  ? `${store.theProject.countdown.teks.warna_font}`
+                  : "#FFF",
+                fontFamily: "Montserrat",
+              }}
+            >
+              Hari
+            </Typography>
+          </Box>
 
-            {/* Jam */}
-            <Box
+          {/* Jam */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+            letterSpacing={4}
+            mx={3}
+          >
+            <Typography
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
+                fontSize: "48px",
+                color: "#C18F7C",
+                fontFamily: "Alex Brush",
               }}
-              letterSpacing={4}
-              mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.hours.toString().length < 2 ? "0" + timeLeft.hours : timeLeft.hours : "23"}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "24px",
-                  color: store.theProject.countdown.teks.warna_font
-                    ? `${store.theProject.countdown.teks.warna_font}`
-                    : "#FFF",
-                  fontFamily: "Montserrat",
-                }}
-              >
-                Jam
-              </Typography>
-            </Box>
+              {timeLeft
+                ? timeLeft.hours.toString().length < 2
+                  ? "0" + timeLeft.hours
+                  : timeLeft.hours
+                : "23"}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "24px",
+                color: store.theProject.countdown.teks.warna_font
+                  ? `${store.theProject.countdown.teks.warna_font}`
+                  : "#FFF",
+                fontFamily: "Montserrat",
+              }}
+            >
+              Jam
+            </Typography>
+          </Box>
 
-            {/* Minutes */}
-            <Box
+          {/* Minutes */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+            letterSpacing={4}
+            mx={3}
+          >
+            <Typography
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
+                fontSize: "48px",
+                color: "#C18F7C",
+                fontFamily: "Alex Brush",
               }}
-              letterSpacing={4}
-              mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.minutes.toString().length < 2 ? "0" + timeLeft.minutes : timeLeft.minutes : "45"}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "24px",
-                  color: store.theProject.countdown.teks.warna_font
-                    ? `${store.theProject.countdown.teks.warna_font}`
-                    : "#FFF",
-                  fontFamily: "Montserrat",
-                }}
-              >
-                Minutes
-              </Typography>
-            </Box>
+              {timeLeft
+                ? timeLeft.minutes.toString().length < 2
+                  ? "0" + timeLeft.minutes
+                  : timeLeft.minutes
+                : "45"}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "24px",
+                color: store.theProject.countdown.teks.warna_font
+                  ? `${store.theProject.countdown.teks.warna_font}`
+                  : "#FFF",
+                fontFamily: "Montserrat",
+              }}
+            >
+              Minutes
+            </Typography>
+          </Box>
 
-            {/* Seconds */}
-            <Box
+          {/* Seconds */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+            letterSpacing={4}
+            mx={3}
+          >
+            <Typography
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
+                fontSize: "48px",
+                color: "#C18F7C",
+                fontFamily: "Alex Brush",
               }}
-              letterSpacing={4}
-              mx={3}
             >
-              <Typography sx={{ fontSize: "48px", color: "#C18F7C", fontFamily: "Alex Brush" }}>
-                {timeLeft ? timeLeft.seconds.toString().length < 2 ? "0" + timeLeft.seconds : timeLeft.seconds : "67"}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "24px",
-                  color: store.theProject.countdown.teks.warna_font
-                    ? `${store.theProject.countdown.teks.warna_font}`
-                    : "#FFF",
-                  fontFamily: "Montserrat",
-                }}
-              >
-                Seconds
-              </Typography>
-            </Box>
+              {timeLeft
+                ? timeLeft.seconds.toString().length < 2
+                  ? "0" + timeLeft.seconds
+                  : timeLeft.seconds
+                : "67"}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: "24px",
+                color: store.theProject.countdown.teks.warna_font
+                  ? `${store.theProject.countdown.teks.warna_font}`
+                  : "#FFF",
+                fontFamily: "Montserrat",
+              }}
+            >
+              Seconds
+            </Typography>
+          </Box>
         </Box>
       </Box>
     );
@@ -765,14 +899,24 @@ const Template3 = (props) => {
             : "lorem ipsum"}
         </Typography>
 
-        <Box display="flex" flexWrap="wrap" width="90%" justifyContent="center" mt={5}>
+        <Box
+          display="flex"
+          flexWrap="wrap"
+          width="90%"
+          justifyContent="center"
+          mt={5}
+        >
           {theArr &&
-            theArr.map((ele) => {
+            theArr.map((ele, idx) => {
               return (
-                <Box m={3}>
+                <Box m={3} key={idx}>
                   <Image
-                    loader={() => process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url}
-                    src={process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url}
+                    loader={() =>
+                      process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url
+                    }
+                    src={
+                      process.env.NEXT_PUBLIC_BACKEND_API + ele.attributes.url
+                    }
                     width={300}
                     height={500}
                   />
@@ -864,6 +1008,10 @@ const Template3 = (props) => {
               padding: "10px",
               borderRadius: "10px",
             }}
+            onChange={(e) => {
+              setNama(e.target.value);
+            }}
+            value={nama}
           />
           <br />
           <FormControl sx={{ mb: "1rem", width: "100%" }}>
@@ -879,7 +1027,7 @@ const Template3 = (props) => {
               Kedatangan
             </Typography>
             <NativeSelect
-              defaultValue={"yes"}
+              defaultValue={datang}
               inputProps={{
                 name: "datang",
                 id: "uncontrolled-native",
@@ -890,9 +1038,13 @@ const Template3 = (props) => {
                 borderRadius: "10px",
                 padding: "0 6px",
               }}
+              onChange={(e) => {
+                setDatang(e.target.value === "false" ? false : true)
+                console.log(e.target.value, "@985");
+              }}
             >
-              <option value={"yes"}>Ya, Saya akan datang</option>
-              <option value={"no"}>Maaf, Saya tidak bisa datang</option>
+              <option value={true}>Ya, Saya akan datang</option>
+              <option value={false}>Maaf, Saya tidak bisa datang</option>
             </NativeSelect>
             {/* <Select
               labelId="demo-simple-select-label"
@@ -930,6 +1082,10 @@ const Template3 = (props) => {
               padding: "10px",
               borderRadius: "10px",
             }}
+            onChange={(e) => {
+              setComment(e.target.value);
+            }}
+            value={comment}
           />
           <Button
             sx={{
@@ -943,6 +1099,7 @@ const Template3 = (props) => {
                 backgroundColor: "#B19179",
               },
             }}
+            onClick={() => send(store.theProject.comments.id)}
           >
             Kirim
             <SendIcon />
@@ -966,7 +1123,9 @@ const Template3 = (props) => {
               overflow="auto"
               sx={{ backgroundColor: "transparent" }}
             >
-              <List sx={{ width: "100%", bgcolor: "transparent", color: "white" }}>
+              <List
+                sx={{ width: "100%", bgcolor: "transparent", color: "white" }}
+              >
                 {theChats.map((ele, idx) => {
                   return (
                     <>
@@ -974,7 +1133,11 @@ const Template3 = (props) => {
                         <ListItemAvatar>
                           <Avatar
                             sx={{ backgroundColor: "#B19179" }}
-                            alt={ele.attributes.nama ? ele.attributes.nama : "John Doe"}
+                            alt={
+                              ele.attributes.nama
+                                ? ele.attributes.nama
+                                : "John Doe"
+                            }
                             src="/static/images/avatar/1.jpg"
                           />
                         </ListItemAvatar>
@@ -989,11 +1152,20 @@ const Template3 = (props) => {
                                 fontWeight="bold"
                                 mr={2}
                               >
-                                {ele.attributes.nama ? ele.attributes.nama : "John Doe"}
+                                {ele.attributes.nama
+                                  ? ele.attributes.nama
+                                  : "John Doe"}
                               </Typography>
                               <Chip
-                                label={ele.attributes.datang ? "Akan Datang" : "Tidak Datang"}
-                                sx={{ color: "#B19179", backgroundColor: "white" }}
+                                label={
+                                  ele.attributes.datang
+                                    ? "Akan Datang"
+                                    : "Tidak Datang"
+                                }
+                                sx={{
+                                  color: "#B19179",
+                                  backgroundColor: "white",
+                                }}
                               />
                             </Fragment>
                           }
@@ -1007,7 +1179,9 @@ const Template3 = (props) => {
                                 mr={2}
                               >
                                 {ele.attributes.createdAt
-                                  ? moment(ele.attributes.createdAt).format("DD MMMM YYYY hh:mm")
+                                  ? moment(ele.attributes.createdAt).local().format(
+                                      "DD MMMM YYYY HH:mm"
+                                    )
                                   : "08 Maret 2022 17:03"}
                               </Typography>
                               <Typography
@@ -1017,7 +1191,9 @@ const Template3 = (props) => {
                                 p={1}
                                 mt={1}
                               >
-                                {ele.attributes.ucapan ? ele.attributes.ucapan : "Lorem Ipsum"}
+                                {ele.attributes.ucapan
+                                  ? ele.attributes.ucapan
+                                  : "Lorem Ipsum"}
                               </Typography>
                             </React.Fragment>
                           }
@@ -1086,6 +1262,12 @@ const Template3 = (props) => {
     );
   };
 
+  function playSound(url) {
+    // const audio = new Audio(url);
+    audioRef.current.play();
+    audioRef.current.loop = true;
+  }
+
   const mapping = {
     Hero: hero(),
     Regards: regard(),
@@ -1106,19 +1288,28 @@ const Template3 = (props) => {
           rel="stylesheet"
         />
       </Head>
-      <Box p={3}>
-        <audio src={store.theProject.audio} autoPlay loop>
-          <embed
-            name="GoodEnough"
-            src={store.theProject.audio}
-            loop="true"
-            hidden="true"
-            autostart="true"
-          />
-        </audio>
+      <Box p={0}>
+        <Box
+          sx={{
+            display: "none",
+          }}
+        >
+          <audio ref={audioRef} src={store.theProject.audio} autoPlay loop>
+            <embed
+              name="GoodEnough"
+              src={store.theProject.audio}
+              loop="true"
+              hidden="true"
+              autostart="true"
+            />
+          </audio>
+        </Box>
+        {modal(open, handleClose, Backdrop, style, setOpen, playSound, Modal, Fade, Box, Typography, Button, "Allura")}
         {store.theProject.order.map((ele, idx) => {
-          return mapping[ele.content];
+          return <div key={idx}>{mapping[ele.content]}</div>;
         })}
+        {openSnack ? successAlert(openSnack, Alert, msg) : <></>}
+
         {/* Hero */}
 
         {/* Regards */}

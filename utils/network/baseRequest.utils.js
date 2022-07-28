@@ -47,7 +47,7 @@ export function GETFILE(url, header) {
 }
 
 export function POST(url, body, header) {
-  console.log(body, "@BODY");
+  // console.log(body, "@BODY");
   return axios
     .post(url, body, header)
     .then(res => {

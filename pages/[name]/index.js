@@ -5,6 +5,8 @@ import Template2 from "../../components/template2";
 import Template3 from "../../components/template3";
 import { GET } from "../../utils/network/baseRequest.utils";
 import api from "../../utils/network/baseUrl.utils";
+import AudioPlayer from "react-h5-audio-player";
+import "react-h5-audio-player/lib/styles.css";
 
 const index = () => {
   const router = useRouter();
@@ -516,12 +518,12 @@ const index = () => {
   };
 
   return (
-    <div>
+    <>
       {store.theProject && tema === 1 ? <Template1 store={store} /> : <></>}
       {store.theProject && tema === 2 ? <Template2 store={store} /> : <></>}
       {store.theProject && tema === 3 ? <Template3 store={store} /> : <></>}
       {/* {store ? <Template1 store={store} /> : <></>} */}
-    </div>
+    </>
   );
 };
 

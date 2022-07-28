@@ -22,6 +22,7 @@ const ENDPOINT = {
   auth: '/api/auth/local',
   admin: '/api/admins',
   tema: '/api/tema',
+  chat: '/api/chats',
   populate: 'populate=',
   sortAsc: '&sort[0]=createdAt%3Aasc'
 };
