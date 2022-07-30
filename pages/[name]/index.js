@@ -511,6 +511,11 @@ const index = () => {
         theProject.data.data[0].attributes.acaras.data[0].id;
       finalData["project_id"] = dataAcara.project.data.id;
       console.log(finalData, "@491");
+      console.log(dataAcara.project.data.attributes.status_active);
+      if(!dataAcara.project.data.attributes.status_active){
+        router.push("/404");
+        return
+      }
       setStore({ theProject: finalData });
     } catch (error) {
       console.log(error, "@493");
